@@ -405,29 +405,56 @@ function providerBadgeClass(type) {
 
 function buildProviderRow(d) {
   const p = d.provider || {};
-  const name = d.org_clean || d.org || 'Unknown';
-  const type = p.type || 'ISP';
+  const vpnName = d.vpn_name;
+  const displayName = vpnName || d.org_clean || d.org || 'Unknown';
+  const type = p.type;
   const site = p.website;
   const logo = p.logo;
+  const source = p.source || d.vpn_name_source;
+
+  const sourceLabels = {
+    'ip_range':    {label:'IP Range Match', color:'rgba(239,68,68,0.15)', border:'rgba(239,68,68,0.4)', text:'#f87171'},
+    'proxycheck':  {label:'ProxyCheck',     color:'rgba(168,85,247,0.15)', border:'rgba(168,85,247,0.4)', text:'#c084fc'},
+    'asn_keyword': {label:'ASN Match',      color:'rgba(234,179,8,0.12)', border:'rgba(234,179,8,0.35)', text:'#fbbf24'},
+  };
+  const srcInfo = sourceLabels[source] || null;
+
+  const srcBadge = srcInfo
+    ? `<span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:${srcInfo.color};border:1px solid ${srcInfo.border};color:${srcInfo.text};letter-spacing:.5px;text-transform:uppercase">${srcInfo.label}</span>`
+    : '';
 
   const logoHtml = logo
     ? `<img class="provider-logo" src="${logo}" alt="" onerror="this.style.display='none'">`
     : `<div class="provider-logo-placeholder">&#127760;</div>`;
 
-  const nameHtml = site
-    ? `<a class="provider-name" href="${site}" target="_blank" rel="noopener">${name}</a>`
-    : `<span class="provider-name">${name}</span>`;
+  const typeBadge = type
+    ? `<span class="provider-type-badge ${providerBadgeClass(type)}">${type}</span>`
+    : '';
 
-  const badgeHtml = `<span class="provider-type-badge ${providerBadgeClass(type)}">${type}</span>`;
+  const nameEl = site
+    ? `<a class="provider-name" href="${site}" target="_blank" rel="noopener">${displayName}</a>`
+    : `<span class="provider-name">${displayName}</span>`;
+
+  const rawOrg = vpnName && d.org && d.org !== displayName
+    ? `<div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px">ASN: ${d.org}</div>`
+    : '';
 
   const linkHtml = site
     ? `<a class="provider-link" href="${site}" target="_blank" rel="noopener">&#8599; visit</a>`
     : '';
 
-  return `<div class="provider-row">${logoHtml}${nameHtml}${badgeHtml}${linkHtml}</div>`;
+  return `<div class="provider-row">
+    ${logoHtml}
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        ${nameEl}${typeBadge}${srcBadge}
+      </div>
+      ${rawOrg}
+    </div>
+    ${linkHtml}
+  </div>`;
 }
 
-// ── Card builder ──────────────────────────────────────────────────────────
 function buildCard(d) {
   const det = d.detection || {};
   const level = det.level || 'low';
@@ -450,7 +477,7 @@ function buildCard(d) {
         <div class="verdict-dot"></div>
         <div>
           <div class="verdict-text">${det.verdict}</div>
-          <div class="verdict-sub">${d.ip} &middot; ${d.asn||'ASN unknown'}</div>
+          <div class="verdict-sub">${d.ip} &middot; <b>${d.vpn_name || d.org_clean || d.org || 'Unknown'}</b> &middot; ${d.asn||''}</div>
         </div>
       </div>
       <div class="score-pill">Risk ${score}/100</div>
@@ -486,6 +513,9 @@ function buildCard(d) {
       </span>
       <span class="source-badge ${s.getipintel?'active':''}">
         ${s.getipintel?'&#10003;':'&#10007;'} getipintel
+      </span>
+      <span class="source-badge ${s.ip_range?'active':''}">
+        ${s.ip_range?'&#10003;':'&#10007;'} IP Range DB
       </span>
     </div>
   </div>`;

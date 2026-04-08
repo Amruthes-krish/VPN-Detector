@@ -21,7 +21,6 @@ BASE_DIR  = Path(__file__).parent
 MMDB_ASN  = BASE_DIR / "mmdb" / "GeoLite2-ASN.mmdb"
 MMDB_CITY = BASE_DIR / "mmdb" / "GeoLite2-City.mmdb"
 
-# Optional: set PROXYCHECK_KEY env var for higher limits (free key from proxycheck.io)
 PROXYCHECK_KEY = os.environ.get("PROXYCHECK_KEY", "")
 
 # ── Legal suffix cleanup ──────────────────────────────────────────────────────
@@ -39,62 +38,87 @@ def clean_org(org: str) -> str:
     cleaned = re.sub(r'\s{2,}', ' ', cleaned).strip(' ,.-')
     return cleaned or org
 
-# ── Provider catalogue ────────────────────────────────────────────────────────
-PROVIDER_DB = {
-    "mullvad":          {"type": "VPN Provider", "website": "https://mullvad.net",               "logo": "https://logo.clearbit.com/mullvad.net"},
-    "nordvpn":          {"type": "VPN Provider", "website": "https://nordvpn.com",                "logo": "https://logo.clearbit.com/nordvpn.com"},
-    "expressvpn":       {"type": "VPN Provider", "website": "https://expressvpn.com",             "logo": "https://logo.clearbit.com/expressvpn.com"},
-    "protonvpn":        {"type": "VPN Provider", "website": "https://protonvpn.com",              "logo": "https://logo.clearbit.com/protonvpn.com"},
-    "surfshark":        {"type": "VPN Provider", "website": "https://surfshark.com",              "logo": "https://logo.clearbit.com/surfshark.com"},
-    "ipvanish":         {"type": "VPN Provider", "website": "https://ipvanish.com",               "logo": "https://logo.clearbit.com/ipvanish.com"},
-    "cyberghost":       {"type": "VPN Provider", "website": "https://cyberghostvpn.com",          "logo": "https://logo.clearbit.com/cyberghostvpn.com"},
-    "private internet": {"type": "VPN Provider", "website": "https://privateinternetaccess.com",  "logo": "https://logo.clearbit.com/privateinternetaccess.com"},
-    "torguard":         {"type": "VPN Provider", "website": "https://torguard.net",               "logo": "https://logo.clearbit.com/torguard.net"},
-    "windscribe":       {"type": "VPN Provider", "website": "https://windscribe.com",             "logo": "https://logo.clearbit.com/windscribe.com"},
-    "purevpn":          {"type": "VPN Provider", "website": "https://purevpn.com",                "logo": "https://logo.clearbit.com/purevpn.com"},
-    "hidemyass":        {"type": "VPN Provider", "website": "https://hidemyass.com",              "logo": "https://logo.clearbit.com/hidemyass.com"},
-    "hide.me":          {"type": "VPN Provider", "website": "https://hide.me",                    "logo": "https://logo.clearbit.com/hide.me"},
-    "strongvpn":        {"type": "VPN Provider", "website": "https://strongvpn.com",              "logo": "https://logo.clearbit.com/strongvpn.com"},
-    "vyprvpn":          {"type": "VPN Provider", "website": "https://vyprvpn.com",                "logo": "https://logo.clearbit.com/vyprvpn.com"},
-    "tunnelbear":       {"type": "VPN Provider", "website": "https://tunnelbear.com",             "logo": "https://logo.clearbit.com/tunnelbear.com"},
-    "hotspot shield":   {"type": "VPN Provider", "website": "https://hotspotshield.com",          "logo": "https://logo.clearbit.com/hotspotshield.com"},
-    "zenmate":          {"type": "VPN Provider", "website": "https://zenmate.com",                "logo": "https://logo.clearbit.com/zenmate.com"},
-    "astrill":          {"type": "VPN Provider", "website": "https://astrill.com",                "logo": "https://logo.clearbit.com/astrill.com"},
-    "ivacy":            {"type": "VPN Provider", "website": "https://ivacy.com",                  "logo": "https://logo.clearbit.com/ivacy.com"},
-    "privatevpn":       {"type": "VPN Provider", "website": "https://privatevpn.com",             "logo": "https://logo.clearbit.com/privatevpn.com"},
-    "cactusvpn":        {"type": "VPN Provider", "website": "https://cactusvpn.com",              "logo": "https://logo.clearbit.com/cactusvpn.com"},
-    "fastestvpn":       {"type": "VPN Provider", "website": "https://fastestvpn.com",             "logo": "https://logo.clearbit.com/fastestvpn.com"},
-    "ovpn":             {"type": "VPN Provider", "website": "https://www.ovpn.com",               "logo": "https://logo.clearbit.com/ovpn.com"},
-    "torproject":       {"type": "Tor Exit",     "website": "https://torproject.org",             "logo": "https://logo.clearbit.com/torproject.org"},
-    "tor exit":         {"type": "Tor Exit",     "website": "https://torproject.org",             "logo": "https://logo.clearbit.com/torproject.org"},
-    "amazon":           {"type": "Cloud",        "website": "https://aws.amazon.com",             "logo": "https://logo.clearbit.com/aws.amazon.com"},
-    "google":           {"type": "Cloud",        "website": "https://cloud.google.com",           "logo": "https://logo.clearbit.com/google.com"},
-    "microsoft":        {"type": "Cloud",        "website": "https://azure.microsoft.com",        "logo": "https://logo.clearbit.com/microsoft.com"},
-    "cloudflare":       {"type": "Cloud",        "website": "https://cloudflare.com",             "logo": "https://logo.clearbit.com/cloudflare.com"},
-    "digitalocean":     {"type": "Cloud",        "website": "https://digitalocean.com",           "logo": "https://logo.clearbit.com/digitalocean.com"},
-    "linode":           {"type": "Cloud",        "website": "https://linode.com",                 "logo": "https://logo.clearbit.com/linode.com"},
-    "akamai":           {"type": "CDN",          "website": "https://akamai.com",                 "logo": "https://logo.clearbit.com/akamai.com"},
-    "vultr":            {"type": "Cloud",        "website": "https://vultr.com",                  "logo": "https://logo.clearbit.com/vultr.com"},
-    "hetzner":          {"type": "Cloud",        "website": "https://hetzner.com",                "logo": "https://logo.clearbit.com/hetzner.com"},
-    "ovh":              {"type": "Cloud",        "website": "https://ovhcloud.com",               "logo": "https://logo.clearbit.com/ovhcloud.com"},
-    "leaseweb":         {"type": "Cloud",        "website": "https://leaseweb.com",               "logo": "https://logo.clearbit.com/leaseweb.com"},
-    "contabo":          {"type": "Cloud",        "website": "https://contabo.com",                "logo": "https://logo.clearbit.com/contabo.com"},
-    "scaleway":         {"type": "Cloud",        "website": "https://scaleway.com",               "logo": "https://logo.clearbit.com/scaleway.com"},
-    "packethub":        {"type": "Datacenter",   "website": "https://packethub.net",              "logo": None},
-    "m247":             {"type": "Datacenter",   "website": "https://m247.com",                   "logo": "https://logo.clearbit.com/m247.com"},
-    "fastly":           {"type": "CDN",          "website": "https://fastly.com",                 "logo": "https://logo.clearbit.com/fastly.com"},
-    "frantech":         {"type": "Datacenter",   "website": "https://frantech.ca",                "logo": None},
-    "hostinger":        {"type": "Cloud",        "website": "https://hostinger.com",              "logo": "https://logo.clearbit.com/hostinger.com"},
-}
+# ── Known VPN IP ranges → exact provider name ─────────────────────────────────
+# Priority 1: IP range match = most accurate, shows exact name like nodedata.io
+VPN_IP_RANGES: list[tuple[str, str, str]] = [
+    # (provider_name, cidr, website)
+    ("Mullvad VPN",               "185.213.154.0/24",  "https://mullvad.net"),
+    ("Mullvad VPN",               "185.65.134.0/23",   "https://mullvad.net"),
+    ("Mullvad VPN",               "193.138.218.0/24",  "https://mullvad.net"),
+    ("Mullvad VPN",               "91.90.44.0/23",     "https://mullvad.net"),
+    ("Mullvad VPN",               "45.83.220.0/22",    "https://mullvad.net"),
+    ("Mullvad VPN",               "194.165.16.0/22",   "https://mullvad.net"),
+    ("NordVPN",                   "103.86.96.0/22",    "https://nordvpn.com"),
+    ("NordVPN",                   "185.234.216.0/22",  "https://nordvpn.com"),
+    ("NordVPN",                   "37.120.217.0/24",   "https://nordvpn.com"),
+    ("NordVPN",                   "45.134.212.0/22",   "https://nordvpn.com"),
+    ("ExpressVPN",                "91.207.174.0/24",   "https://expressvpn.com"),
+    ("ExpressVPN",                "92.223.88.0/24",    "https://expressvpn.com"),
+    ("ProtonVPN",                 "185.159.156.0/22",  "https://protonvpn.com"),
+    ("ProtonVPN",                 "37.19.198.0/23",    "https://protonvpn.com"),
+    ("ProtonVPN",                 "185.107.80.0/22",   "https://protonvpn.com"),
+    ("Surfshark",                 "45.139.48.0/22",    "https://surfshark.com"),
+    ("Surfshark",                 "156.146.56.0/22",   "https://surfshark.com"),
+    ("IPVanish",                  "198.8.80.0/20",     "https://ipvanish.com"),
+    ("CyberGhost VPN",            "93.115.24.0/22",    "https://cyberghostvpn.com"),
+    ("CyberGhost VPN",            "77.247.96.0/20",    "https://cyberghostvpn.com"),
+    ("Private Internet Access",   "198.8.80.0/20",     "https://privateinternetaccess.com"),
+    ("Private Internet Access",   "209.222.18.0/23",   "https://privateinternetaccess.com"),
+    ("TorGuard",                  "23.19.244.0/23",    "https://torguard.net"),
+    ("Windscribe",                "185.242.4.0/22",    "https://windscribe.com"),
+    ("Windscribe",                "64.44.32.0/20",     "https://windscribe.com"),
+    ("PureVPN",                   "91.109.4.0/22",     "https://purevpn.com"),
+    ("PureVPN",                   "185.94.96.0/22",    "https://purevpn.com"),
+    ("HideMyAss VPN",             "37.19.200.0/21",    "https://hidemyass.com"),
+    ("Hotspot Shield",            "66.187.76.0/22",    "https://hotspotshield.com"),
+    ("Astrill VPN",               "185.195.232.0/22",  "https://astrill.com"),
+    ("TunnelBear",                "216.245.212.0/22",  "https://tunnelbear.com"),
+    ("VyprVPN",                   "91.108.4.0/22",     "https://vyprvpn.com"),
+    ("SoftEther VPN",             "124.18.0.0/16",     "https://softether.org"),
+    ("SoftEther VPN",             "219.117.0.0/16",    "https://softether.org"),
+    ("VPN Gate",                  "219.100.0.0/15",    "https://vpngate.net"),
+    ("VPN Gate",                  "220.100.0.0/14",    "https://vpngate.net"),
+    ("VPN Gate",                  "133.9.0.0/16",      "https://vpngate.net"),
+    ("Cloudflare WARP",           "162.159.192.0/24",  "https://cloudflare.com"),
+    ("Cloudflare WARP",           "162.159.193.0/24",  "https://cloudflare.com"),
+    ("Tor Exit Node",             "185.220.100.0/22",  "https://torproject.org"),
+    ("Tor Exit Node",             "185.220.101.0/24",  "https://torproject.org"),
+    ("Tor Exit Node",             "51.15.0.0/16",      "https://torproject.org"),
+    ("Tor Exit Node",             "199.87.154.0/23",   "https://torproject.org"),
+    ("Tor Exit Node",             "171.25.193.0/24",   "https://torproject.org"),
+    ("Tor Exit Node",             "62.102.148.0/22",   "https://torproject.org"),
+]
 
+# Pre-compile all networks once at startup for fast lookup
+_COMPILED_RANGES: list[tuple[str, ipaddress.IPv4Network | ipaddress.IPv6Network, str]] = []
+for _name, _cidr, _site in VPN_IP_RANGES:
+    try:
+        _COMPILED_RANGES.append((_name, ipaddress.ip_network(_cidr, strict=False), _site))
+    except ValueError:
+        pass
+
+def detect_by_ip_range(ip: str) -> tuple[str, str] | tuple[None, None]:
+    """Returns (provider_name, website) or (None, None)."""
+    try:
+        ip_obj = ipaddress.ip_address(ip)
+        for name, net, site in _COMPILED_RANGES:
+            if ip_obj in net:
+                return name, site
+    except Exception:
+        pass
+    return None, None
+
+# ── VPN keyword lists ─────────────────────────────────────────────────────────
 VPN_KEYWORDS = [
     "vpn","mullvad","nordvpn","expressvpn","protonvpn","surfshark",
     "ipvanish","cyberghost","pia","private internet access","hidemyass",
     "torguard","windscribe","tunnelbear","hotspot shield","purevpn",
-    "avast","hide.me","vyprvpn","strongvpn","ivacy","perfect privacy",
+    "hide.me","vyprvpn","strongvpn","ivacy","perfect privacy",
     "astrill","cactusvpn","fastestvpn","safervpn","zenmate",
     "privatevpn","anonine","ovpn","azirevpn","trust.zone",
-    "tor","torproject","exit node","anonymizer","anonymous",
+    "softether","openvpn","wireguard","l2tp","ikev2","pptp","sstp",
+    "vpngate","vpn gate","freevpn","anonymizer","anonymous","anon",
+    "tor","torproject","exit node","relay",
 ]
 DATACENTER_KEYWORDS = [
     "amazon","aws","google","microsoft","azure","digitalocean",
@@ -106,40 +130,92 @@ DATACENTER_KEYWORDS = [
     "spartanhost","frantech","buyvm","ramnode","akamai","fastly","cdn",
 ]
 
-def get_provider_info(org: str) -> dict:
-    org_lower = (org or "").lower()
+# ── Provider catalogue ────────────────────────────────────────────────────────
+PROVIDER_DB: dict[str, dict] = {
+    "mullvad":           {"type":"VPN Provider","website":"https://mullvad.net",               "logo":"https://logo.clearbit.com/mullvad.net"},
+    "nordvpn":           {"type":"VPN Provider","website":"https://nordvpn.com",                "logo":"https://logo.clearbit.com/nordvpn.com"},
+    "expressvpn":        {"type":"VPN Provider","website":"https://expressvpn.com",             "logo":"https://logo.clearbit.com/expressvpn.com"},
+    "protonvpn":         {"type":"VPN Provider","website":"https://protonvpn.com",              "logo":"https://logo.clearbit.com/protonvpn.com"},
+    "surfshark":         {"type":"VPN Provider","website":"https://surfshark.com",              "logo":"https://logo.clearbit.com/surfshark.com"},
+    "ipvanish":          {"type":"VPN Provider","website":"https://ipvanish.com",               "logo":"https://logo.clearbit.com/ipvanish.com"},
+    "cyberghost":        {"type":"VPN Provider","website":"https://cyberghostvpn.com",          "logo":"https://logo.clearbit.com/cyberghostvpn.com"},
+    "private internet":  {"type":"VPN Provider","website":"https://privateinternetaccess.com",  "logo":"https://logo.clearbit.com/privateinternetaccess.com"},
+    "torguard":          {"type":"VPN Provider","website":"https://torguard.net",               "logo":"https://logo.clearbit.com/torguard.net"},
+    "windscribe":        {"type":"VPN Provider","website":"https://windscribe.com",             "logo":"https://logo.clearbit.com/windscribe.com"},
+    "purevpn":           {"type":"VPN Provider","website":"https://purevpn.com",                "logo":"https://logo.clearbit.com/purevpn.com"},
+    "hidemyass":         {"type":"VPN Provider","website":"https://hidemyass.com",              "logo":"https://logo.clearbit.com/hidemyass.com"},
+    "hide.me":           {"type":"VPN Provider","website":"https://hide.me",                    "logo":"https://logo.clearbit.com/hide.me"},
+    "strongvpn":         {"type":"VPN Provider","website":"https://strongvpn.com",              "logo":"https://logo.clearbit.com/strongvpn.com"},
+    "vyprvpn":           {"type":"VPN Provider","website":"https://vyprvpn.com",                "logo":"https://logo.clearbit.com/vyprvpn.com"},
+    "tunnelbear":        {"type":"VPN Provider","website":"https://tunnelbear.com",             "logo":"https://logo.clearbit.com/tunnelbear.com"},
+    "hotspot shield":    {"type":"VPN Provider","website":"https://hotspotshield.com",          "logo":"https://logo.clearbit.com/hotspotshield.com"},
+    "zenmate":           {"type":"VPN Provider","website":"https://zenmate.com",                "logo":"https://logo.clearbit.com/zenmate.com"},
+    "astrill":           {"type":"VPN Provider","website":"https://astrill.com",                "logo":"https://logo.clearbit.com/astrill.com"},
+    "ivacy":             {"type":"VPN Provider","website":"https://ivacy.com",                  "logo":"https://logo.clearbit.com/ivacy.com"},
+    "softether":         {"type":"VPN Provider","website":"https://softether.org",              "logo":"https://logo.clearbit.com/softether.org"},
+    "vpn gate":          {"type":"VPN Provider","website":"https://vpngate.net",                "logo":"https://logo.clearbit.com/vpngate.net"},
+    "vpngate":           {"type":"VPN Provider","website":"https://vpngate.net",                "logo":"https://logo.clearbit.com/vpngate.net"},
+    "warp":              {"type":"VPN Provider","website":"https://cloudflare.com",             "logo":"https://logo.clearbit.com/cloudflare.com"},
+    "torproject":        {"type":"Tor Exit",    "website":"https://torproject.org",             "logo":"https://logo.clearbit.com/torproject.org"},
+    "tor exit":          {"type":"Tor Exit",    "website":"https://torproject.org",             "logo":"https://logo.clearbit.com/torproject.org"},
+    "amazon":            {"type":"Cloud",       "website":"https://aws.amazon.com",             "logo":"https://logo.clearbit.com/aws.amazon.com"},
+    "google":            {"type":"Cloud",       "website":"https://cloud.google.com",           "logo":"https://logo.clearbit.com/google.com"},
+    "microsoft":         {"type":"Cloud",       "website":"https://azure.microsoft.com",        "logo":"https://logo.clearbit.com/microsoft.com"},
+    "cloudflare":        {"type":"Cloud",       "website":"https://cloudflare.com",             "logo":"https://logo.clearbit.com/cloudflare.com"},
+    "digitalocean":      {"type":"Cloud",       "website":"https://digitalocean.com",           "logo":"https://logo.clearbit.com/digitalocean.com"},
+    "linode":            {"type":"Cloud",       "website":"https://linode.com",                 "logo":"https://logo.clearbit.com/linode.com"},
+    "vultr":             {"type":"Cloud",       "website":"https://vultr.com",                  "logo":"https://logo.clearbit.com/vultr.com"},
+    "hetzner":           {"type":"Cloud",       "website":"https://hetzner.com",                "logo":"https://logo.clearbit.com/hetzner.com"},
+    "ovh":               {"type":"Cloud",       "website":"https://ovhcloud.com",               "logo":"https://logo.clearbit.com/ovhcloud.com"},
+    "leaseweb":          {"type":"Cloud",       "website":"https://leaseweb.com",               "logo":"https://logo.clearbit.com/leaseweb.com"},
+    "contabo":           {"type":"Cloud",       "website":"https://contabo.com",                "logo":"https://logo.clearbit.com/contabo.com"},
+    "scaleway":          {"type":"Cloud",       "website":"https://scaleway.com",               "logo":"https://logo.clearbit.com/scaleway.com"},
+    "packethub":         {"type":"Datacenter",  "website":"https://packethub.net",              "logo":None},
+    "m247":              {"type":"Datacenter",  "website":"https://m247.com",                   "logo":"https://logo.clearbit.com/m247.com"},
+    "akamai":            {"type":"CDN",         "website":"https://akamai.com",                 "logo":"https://logo.clearbit.com/akamai.com"},
+    "fastly":            {"type":"CDN",         "website":"https://fastly.com",                 "logo":"https://logo.clearbit.com/fastly.com"},
+    "hostinger":         {"type":"Cloud",       "website":"https://hostinger.com",              "logo":"https://logo.clearbit.com/hostinger.com"},
+    "frantech":          {"type":"Datacenter",  "website":"https://frantech.ca",                "logo":None},
+}
+
+def get_provider_info(name: str) -> dict:
+    name_lower = (name or "").lower()
     for key, info in PROVIDER_DB.items():
-        if key in org_lower:
+        if key in name_lower:
             return info
     return {"type": "ISP", "website": None, "logo": None}
 
-# ── Source: proxycheck.io ─────────────────────────────────────────────────────
+def provider_type_from_name(name: str) -> str:
+    n = (name or "").lower()
+    if "tor" in n:                  return "Tor Exit"
+    if "gate" in n or "vpn" in n:   return "VPN Provider"
+    if "softether" in n:            return "VPN Provider"
+    if "warp" in n:                 return "VPN Provider"
+    return "VPN Provider"
+
+# ── External API fetchers ─────────────────────────────────────────────────────
 async def fetch_proxycheck(ip: str, client: httpx.AsyncClient) -> dict:
-    result = {"vpn": False, "proxy": False, "type": None, "operator": None, "risk": 0, "ok": False}
+    result = {"vpn":False,"proxy":False,"type":None,"operator":None,"risk":0,"ok":False}
     try:
-        params = {"vpn": 1, "asn": 1, "risk": 1}
-        if PROXYCHECK_KEY:
-            params["key"] = PROXYCHECK_KEY
+        params = {"vpn":1,"asn":1,"risk":1}
+        if PROXYCHECK_KEY: params["key"] = PROXYCHECK_KEY
         resp = await client.get(f"https://proxycheck.io/v2/{ip}", params=params, timeout=5.0)
         if resp.status_code == 200:
             data = resp.json()
             ip_data = data.get(ip, {})
             if ip_data:
                 result["ok"]       = True
-                result["vpn"]      = ip_data.get("vpn", "no") == "yes"
-                result["proxy"]    = ip_data.get("proxy", "no") == "yes"
+                result["vpn"]      = ip_data.get("vpn","no") == "yes"
+                result["proxy"]    = ip_data.get("proxy","no") == "yes"
                 result["type"]     = ip_data.get("type")
-                result["operator"] = ip_data.get("operator")   # e.g. "Mullvad VPN" ← best field
+                result["operator"] = ip_data.get("operator")
                 result["risk"]     = int(ip_data.get("risk", 0))
-    except Exception:
-        pass
+    except Exception: pass
     return result
 
-# ── Source: ipapi.is ──────────────────────────────────────────────────────────
 async def fetch_ipapiis(ip: str, client: httpx.AsyncClient) -> dict:
-    result = {"is_vpn": False, "is_tor": False, "is_proxy": False,
-              "is_datacenter": False, "is_abuser": False,
-              "company_type": None, "abuse_score": 0, "ok": False}
+    result = {"is_vpn":False,"is_tor":False,"is_proxy":False,"is_datacenter":False,
+              "is_abuser":False,"company_type":None,"abuse_score":0,"ok":False}
     try:
         resp = await client.get(f"https://api.ipapi.is/?q={ip}", timeout=5.0)
         if resp.status_code == 200:
@@ -154,17 +230,15 @@ async def fetch_ipapiis(ip: str, client: httpx.AsyncClient) -> dict:
             result["is_abuser"]     = bool(abuse.get("is_abuser", False))
             result["abuse_score"]   = int(abuse.get("abuse_score", 0))
             result["company_type"]  = company.get("type")
-    except Exception:
-        pass
+    except Exception: pass
     return result
 
-# ── Source: getipintel.net ────────────────────────────────────────────────────
 async def fetch_getipintel(ip: str, client: httpx.AsyncClient) -> dict:
-    result = {"score": 0.0, "ok": False}
+    result = {"score":0.0,"ok":False}
     try:
         resp = await client.get(
             "https://check.getipintel.net/check.php",
-            params={"ip": ip, "contact": "info@vpndetector.app", "flags": "m", "format": "json"},
+            params={"ip":ip,"contact":"info@vpndetector.app","flags":"m","format":"json"},
             timeout=6.0
         )
         if resp.status_code == 200:
@@ -172,20 +246,24 @@ async def fetch_getipintel(ip: str, client: httpx.AsyncClient) -> dict:
             if str(data.get("status")) == "success":
                 result["score"] = float(data.get("result", 0))
                 result["ok"]    = True
-    except Exception:
-        pass
+    except Exception: pass
     return result
 
-# ── Unified scoring (5 sources) ───────────────────────────────────────────────
-def score_vpn(org: str, ip_api: dict, proxycheck: dict, ipapiis: dict, getipintel: dict) -> dict:
+# ── Scoring ───────────────────────────────────────────────────────────────────
+def score_vpn(org: str, ip_api: dict, proxycheck: dict, ipapiis: dict,
+              getipintel: dict, ip_range_hit: bool) -> dict:
     org_lower = (org or "").lower()
     score = 0
-    flags = set()
+    flags: set[str] = set()
 
-    # ASN keyword match
+    # IP range match — highest confidence signal
+    if ip_range_hit:
+        score += 80; flags.add("known_vpn_range")
+
+    # ASN keyword
     for kw in VPN_KEYWORDS:
         if kw in org_lower:
-            score += 55; flags.add("known_vpn_provider"); break
+            score += 50; flags.add("known_vpn_provider"); break
     for kw in DATACENTER_KEYWORDS:
         if kw in org_lower:
             score += 25; flags.add("datacenter"); break
@@ -200,13 +278,12 @@ def score_vpn(org: str, ip_api: dict, proxycheck: dict, ipapiis: dict, getipinte
         if proxycheck.get("vpn"):   score += 40; flags.add("vpn_confirmed")
         if proxycheck.get("proxy"): score += 25; flags.add("proxy_confirmed")
         ptype = (proxycheck.get("type") or "").upper()
-        if ptype == "TOR":
-            score += 50; flags.add("tor_exit")
-        elif ptype in ("SOCKS4","SOCKS5","WEB","HTTPS"):
-            score += 20; flags.add(f"proxy_{ptype.lower()}")
+        if ptype == "TOR":              score += 50; flags.add("tor_exit")
+        elif ptype in ("SOCKS4","SOCKS5","WEB","HTTPS"): score += 20; flags.add(f"proxy_{ptype.lower()}")
         risk = proxycheck.get("risk", 0)
         if risk >= 80:   score += 15; flags.add("high_risk")
         elif risk >= 50: score += 8;  flags.add("medium_risk")
+        if proxycheck.get("operator"): flags.add("operator_identified")
 
     # ipapi.is
     if ipapiis.get("ok"):
@@ -216,7 +293,7 @@ def score_vpn(org: str, ip_api: dict, proxycheck: dict, ipapiis: dict, getipinte
         if ipapiis.get("is_datacenter"): score += 20; flags.add("datacenter")
         if ipapiis.get("is_abuser"):     score += 15; flags.add("abuser")
 
-    # getipintel probability
+    # getipintel
     if getipintel.get("ok"):
         s = getipintel.get("score", 0)
         if s >= 0.99:   score += 30; flags.add("intel_definite")
@@ -224,13 +301,10 @@ def score_vpn(org: str, ip_api: dict, proxycheck: dict, ipapiis: dict, getipinte
         elif s >= 0.70: score += 10; flags.add("intel_medium")
 
     score = min(score, 100)
-
     if score >= 60:   verdict, level = "VPN / Proxy",        "high"
     elif score >= 30: verdict, level = "Datacenter / Cloud", "medium"
-    else:             verdict, level = "Residential",         "low"
-
+    else:             verdict, level = "Residential",        "low"
     return {"score": score, "verdict": verdict, "level": level, "flags": sorted(flags)}
-
 
 class BulkRequest(BaseModel):
     ips: list[str]
@@ -244,6 +318,7 @@ async def lookup_single(ip: str) -> dict:
         "ip": ip, "asn": None, "org": "Unknown", "org_clean": "Unknown",
         "country": None, "country_code": None, "city": None,
         "latitude": None, "longitude": None, "timezone": None, "isp": None,
+        "vpn_name": None, "vpn_name_source": None,
         "detection": {}, "provider": {},
         "raw_ip_api": {}, "raw_proxycheck": {}, "raw_ipapiis": {}, "raw_getipintel": {},
         "mmdb_available": False, "sources": {}
@@ -252,7 +327,7 @@ async def lookup_single(ip: str) -> dict:
     if not is_valid_ip(ip):
         result["error"] = "Invalid IP address"; return result
 
-    # MMDB (local, fast)
+    # ── 1. MMDB ───────────────────────────────────────────────────────────────
     if MMDB_ASN.exists():
         try:
             with geoip2.database.Reader(str(MMDB_ASN)) as r:
@@ -274,12 +349,12 @@ async def lookup_single(ip: str) -> dict:
                 result["timezone"]     = c.location.time_zone
         except geoip2.errors.AddressNotFoundError: pass
 
-    # All 4 external APIs in parallel
+    # ── 2. All external APIs in parallel ──────────────────────────────────────
     async with httpx.AsyncClient() as client:
         ip_api_task, pc_task, ia_task, gi_task = await asyncio.gather(
             client.get(
                 f"http://ip-api.com/json/{ip}",
-                params={"fields": "status,message,country,countryCode,city,isp,org,as,proxy,hosting,vpn,timezone,lat,lon"},
+                params={"fields":"status,message,country,countryCode,city,isp,org,as,proxy,hosting,vpn,timezone,lat,lon"},
                 timeout=5.0
             ),
             fetch_proxycheck(ip, client),
@@ -289,7 +364,7 @@ async def lookup_single(ip: str) -> dict:
         )
 
     # Parse ip-api
-    ip_api_data = {}
+    ip_api_data: dict = {}
     if not isinstance(ip_api_task, Exception):
         try:
             ip_api_data = ip_api_task.json()
@@ -315,30 +390,63 @@ async def lookup_single(ip: str) -> dict:
     result["raw_ipapiis"]    = ipapiis_data
     result["raw_getipintel"] = getipintel_data
 
-    # Use proxycheck operator name if available — it's the most accurate provider name
-    operator = proxycheck_data.get("operator") if isinstance(proxycheck_data, dict) else None
-    result["org_clean"] = operator if operator else clean_org(result["org"])
-    result["provider"]  = get_provider_info(operator or result["org"])
-    result["detection"] = score_vpn(result["org"], ip_api_data, proxycheck_data, ipapiis_data, getipintel_data)
+    # ── 3. Determine VPN name — priority chain ────────────────────────────────
+    #  P1: IP range match  (e.g. "VPN Gate", "SoftEther VPN", "Mullvad VPN")
+    #  P2: proxycheck operator field  (e.g. "Mullvad VPN", "NordVPN")
+    #  P3: ASN keyword match → cleaned org name
+    vpn_name: str | None = None
+    vpn_name_source: str | None = None
+    vpn_website: str | None = None
+
+    range_name, range_site = detect_by_ip_range(ip)
+    if range_name:
+        vpn_name        = range_name
+        vpn_name_source = "ip_range"
+        vpn_website     = range_site
+    elif isinstance(proxycheck_data, dict) and proxycheck_data.get("operator"):
+        vpn_name        = proxycheck_data["operator"]
+        vpn_name_source = "proxycheck"
+    
+    result["vpn_name"]        = vpn_name
+    result["vpn_name_source"] = vpn_name_source
+
+    # Build org_clean and provider block
+    if vpn_name:
+        result["org_clean"] = vpn_name
+        pinfo = get_provider_info(vpn_name)
+        result["provider"] = {
+            "type":    pinfo.get("type") or provider_type_from_name(vpn_name),
+            "website": vpn_website or pinfo.get("website"),
+            "logo":    pinfo.get("logo"),
+            "source":  vpn_name_source,
+        }
+    else:
+        result["org_clean"] = clean_org(result["org"])
+        pinfo = get_provider_info(result["org"])
+        result["provider"]  = {**pinfo, "source": "asn_keyword"}
+
+    ip_range_hit = bool(range_name)
+    result["detection"] = score_vpn(result["org"], ip_api_data, proxycheck_data,
+                                    ipapiis_data, getipintel_data, ip_range_hit)
 
     result["sources"] = {
         "mmdb":       result["mmdb_available"],
-        "ip_api":     bool(isinstance(result["raw_ip_api"], dict) and result["raw_ip_api"].get("status") == "success"),
+        "ip_api":     bool(ip_api_data.get("status") == "success"),
         "proxycheck": bool(isinstance(proxycheck_data, dict) and proxycheck_data.get("ok")),
         "ipapiis":    bool(isinstance(ipapiis_data, dict) and ipapiis_data.get("ok")),
         "getipintel": bool(isinstance(getipintel_data, dict) and getipintel_data.get("ok")),
+        "ip_range":   ip_range_hit,
     }
-
     return result
-
 
 @app.get("/api/health")
 async def health():
     return {
         "status": "ok",
-        "mmdb_asn":  MMDB_ASN.exists(),
-        "mmdb_city": MMDB_CITY.exists(),
-        "proxycheck_key": bool(PROXYCHECK_KEY),
+        "mmdb_asn":      MMDB_ASN.exists(),
+        "mmdb_city":     MMDB_CITY.exists(),
+        "proxycheck_key":bool(PROXYCHECK_KEY),
+        "ip_ranges":     len(_COMPILED_RANGES),
     }
 
 @app.get("/api/lookup/{ip}")
@@ -355,8 +463,7 @@ async def bulk_lookup(req: BulkRequest):
     results = []
     for i, ip in enumerate(ips):
         results.append(await lookup_single(ip))
-        if (i + 1) % 10 == 0:
-            await asyncio.sleep(1.0)
+        if (i + 1) % 10 == 0: await asyncio.sleep(1.0)
     return {"results": results, "total": len(results)}
 
 @app.post("/api/export/csv")
@@ -365,34 +472,35 @@ async def export_csv(req: BulkRequest):
     results = []
     for i, ip in enumerate(ips):
         results.append(await lookup_single(ip))
-        if (i + 1) % 10 == 0:
-            await asyncio.sleep(1.0)
+        if (i + 1) % 10 == 0: await asyncio.sleep(1.0)
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow([
-        "IP","Verdict","Risk Score","Level","Provider Type","ASN",
-        "Provider/Org","Org (Clean)","ISP","Country","City","Timezone",
-        "Latitude","Longitude","Flags",
+        "IP","VPN Name","VPN Name Source","Verdict","Risk Score","Level",
+        "Provider Type","ASN","Provider/Org","Org (Clean)","ISP",
+        "Country","City","Timezone","Latitude","Longitude","Flags",
         "ProxyCheck VPN","ProxyCheck Operator","ProxyCheck Risk",
         "ipapi.is VPN","ipapi.is Tor","ipapi.is Proxy","ipapi.is Datacenter",
-        "GetIPIntel Score","Website","MMDB Available"
+        "GetIPIntel Score","IP Range Match","Website","MMDB Available"
     ])
     for r in results:
-        det = r.get("detection", {}); prov = r.get("provider", {})
-        pc  = r.get("raw_proxycheck", {}); ia = r.get("raw_ipapiis", {}); gi = r.get("raw_getipintel", {})
+        det = r.get("detection",{}); prov = r.get("provider",{})
+        pc  = r.get("raw_proxycheck",{}); ia = r.get("raw_ipapiis",{}); gi = r.get("raw_getipintel",{})
+        src = r.get("sources",{})
         writer.writerow([
-            r.get("ip",""), det.get("verdict",""), det.get("score",""), det.get("level",""),
+            r.get("ip",""), r.get("vpn_name",""), r.get("vpn_name_source",""),
+            det.get("verdict",""), det.get("score",""), det.get("level",""),
             prov.get("type",""), r.get("asn",""), r.get("org",""), r.get("org_clean",""),
             r.get("isp",""), r.get("country",""), r.get("city",""), r.get("timezone",""),
             r.get("latitude",""), r.get("longitude",""), ", ".join(det.get("flags",[])),
             pc.get("vpn",""), pc.get("operator",""), pc.get("risk",""),
             ia.get("is_vpn",""), ia.get("is_tor",""), ia.get("is_proxy",""), ia.get("is_datacenter",""),
-            gi.get("score",""), prov.get("website",""), r.get("mmdb_available",False)
+            gi.get("score",""), src.get("ip_range",""), prov.get("website",""), r.get("mmdb_available",False)
         ])
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]), media_type="text/csv",
-        headers={"Content-Disposition": "attachment; filename=vpn_lookup_results.csv"}
+        headers={"Content-Disposition":"attachment; filename=vpn_lookup_results.csv"}
     )
 
 FRONTEND_DIR = BASE_DIR / "frontend"
