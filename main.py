@@ -667,10 +667,8 @@ async def ai_report(req: ReportRequest):
             f"| {r.get('country','')} | {', '.join(det.get('flags',[])[:3])} |"
         )
 
-    table = "| IP | Provider | Verdict | Score | Country | Signals |
-|---|---|---|---|---|---|
-" + "
-".join(rows)
+    header = "| IP | Provider | Verdict | Score | Country | Signals |\n|---|---|---|---|---|---|"
+    table = header + "\n" + "\n".join(rows)
 
     prompt = f"""You are a senior cybersecurity analyst. Write a professional threat intelligence report for the following bulk IP scan results.
 
