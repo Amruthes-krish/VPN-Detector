@@ -514,8 +514,8 @@ function buildCard(d) {
       <span class="source-badge ${s.getipintel?'active':''}">
         ${s.getipintel?'&#10003;':'&#10007;'} getipintel
       </span>
-      <span class="source-badge ${s.ip_range?'active':''}">
-        ${s.ip_range?'&#10003;':'&#10007;'} IP Range DB
+      <span class="source-badge active" style="${s.ip_range?'color:#f87171;border-color:rgba(239,68,68,0.5);background:rgba(239,68,68,0.08)':''}">
+        ${s.ip_range?'&#9670; IP Range DB &middot; HIT':'&#10003; IP Range DB'}
       </span>
     </div>
   </div>`;
