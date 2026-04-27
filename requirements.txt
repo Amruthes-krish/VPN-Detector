@@ -1,6 +1,65 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-geoip2==4.8.0
-httpx==0.27.2
-python-multipart==0.0.9
-anthropic==0.40.0
+# Advanced IP Intelligence & Threat Analysis Platform
+# Python Dependencies
+
+# Core Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# HTTP & Networking
+httpx==0.25.1
+aiohttp==3.9.1
+requests==2.31.0
+
+# GeoIP & Location Services
+geoip2==4.7.0
+maxminddb==2.2.0
+
+# API Integration
+anthropic==0.7.1  # Optional: For AI analysis
+python-dotenv==1.0.0
+
+# Security & Authentication
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Rate Limiting & Performance
+slowapi==0.1.9
+cachetools==5.3.2
+
+# Data Processing
+pandas==2.1.2  # Optional: For bulk analysis
+openpyxl==3.1.2  # Optional: For Excel export
+
+# Monitoring & Logging
+prometheus-client==0.19.0
+python-json-logger==2.0.7
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+httpx-mock==0.25.2
+pytest-cov==4.1.0
+
+# Development
+black==23.12.0
+flake8==6.1.0
+mypy==1.7.1
+isort==5.13.2
+
+# Deployment
+gunicorn==21.2.0
+docker==7.0.0  # For Docker integration
+
+# Optional: Advanced Features
+shodan==1.28.1  # Optional: Shodan API integration
+dnspython==2.4.2  # Optional: DNS resolution
+
+# Optional: SIEM Integration
+splunk-sdk==1.7.5  # Optional: Splunk integration
+boto3==1.29.7  # Optional: AWS integration
+slack-sdk==3.26.0  # Optional: Slack integration
+
+# Production Server
+python-multipart==0.0.6
