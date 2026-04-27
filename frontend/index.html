@@ -429,6 +429,7 @@
       <button class="tab-btn" onclick="showTab('anonymization')">Anonymization</button>
       <button class="tab-btn" onclick="showTab('risk')">Risk Assessment</button>
       <button class="tab-btn" onclick="showTab('investigation')">Investigation</button>
+      <button class="tab-btn" onclick="showTab('bulk')">Bulk Lookup</button>
     </div>
 
     <!-- Tabs Content -->
@@ -464,6 +465,63 @@
       <div id="investigationContent"></div>
     </div>
 
+    <div id="bulk" class="tab-panel">
+      <div class="card">
+        <div class="card-title">Bulk IP Lookup</div>
+        <p style="font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 12px;">
+          Enter up to 100 IP addresses, one per line. Results include ASN, ISP, country, risk level, and more.
+        </p>
+        <textarea
+          id="bulkInput"
+          style="
+            width: 100%; height: 140px; background: var(--bg3); border: 1.5px solid var(--border2);
+            border-radius: 8px; padding: 12px; font-family: var(--mono); font-size: 13px;
+            color: var(--text); resize: vertical; outline: none;
+          "
+          placeholder="8.8.8.8&#10;1.1.1.1&#10;9.9.9.9"
+        ></textarea>
+        <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+          <button id="bulkRunBtn" class="search-btn" onclick="runBulkLookup()">Run Bulk Lookup</button>
+          <button class="search-btn" style="background: var(--bg3); border: 1.5px solid var(--border2); color: var(--text);" onclick="exportBulkCSV()">Export CSV</button>
+        </div>
+      </div>
+
+      <div id="bulkStatus" style="display:none;" class="loading">
+        <div class="spinner"></div>
+        <span id="bulkStatusText">Running lookup...</span>
+      </div>
+
+      <div id="bulkResults" style="display:none;">
+        <div class="card" style="padding: 0; overflow: hidden;">
+          <div style="overflow-x: auto;">
+            <table id="bulkTable" style="
+              width: 100%; border-collapse: collapse;
+              font-family: var(--mono); font-size: 12px;
+            ">
+              <thead>
+                <tr style="background: var(--bg3); border-bottom: 1.5px solid var(--border2);">
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">#</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">IP</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">ASN</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">ASN Org</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">ISP</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">Country</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">City</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">Risk</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">Score</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">VPN</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">Proxy</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">TOR</th>
+                  <th style="padding: 12px 14px; text-align: left; color: var(--accent); white-space: nowrap;">Reputation</th>
+                </tr>
+              </thead>
+              <tbody id="bulkTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- No Results Message -->
     <div id="noResults" class="no-results">
       <p>Enter an IP address to begin analysis</p>
@@ -478,6 +536,14 @@
     const noResults = document.getElementById('noResults');
 
     let currentData = null;
+
+    // Show tabs on load (Bulk Lookup is always available)
+    tabsContainer.style.display = 'flex';
+    document.getElementById('overview').classList.remove('active');
+    document.getElementById('bulk').classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-btn')[document.querySelectorAll('.tab-btn').length - 1].classList.add('active');
+    noResults.style.display = 'none';
 
     // Event listeners
     searchBtn.addEventListener('click', analyzeIP);
@@ -961,6 +1027,89 @@
       }
 
       document.getElementById('investigationContent').innerHTML = html;
+    }
+
+    // ── Bulk Lookup ──────────────────────────────────────────────────────────────
+    let bulkData = [];
+
+    async function runBulkLookup() {
+      const raw = document.getElementById('bulkInput').value.trim();
+      if (!raw) { alert('Please enter at least one IP address'); return; }
+
+      const ips = raw.split('\n').map(l => l.trim()).filter(Boolean);
+      if (ips.length === 0) { alert('No valid IPs found'); return; }
+      if (ips.length > 100) { alert('Maximum 100 IPs per request'); return; }
+
+      const btn = document.getElementById('bulkRunBtn');
+      btn.disabled = true;
+      btn.textContent = 'Running...';
+
+      document.getElementById('bulkStatus').style.display = 'flex';
+      document.getElementById('bulkStatusText').textContent = `Looking up ${ips.length} IP(s)...`;
+      document.getElementById('bulkResults').style.display = 'none';
+
+      try {
+        const resp = await fetch('/api/advanced/bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ips })
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        bulkData = await resp.json();
+        renderBulkTable(bulkData);
+        document.getElementById('bulkResults').style.display = 'block';
+      } catch (err) {
+        alert('Bulk lookup failed: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Run Bulk Lookup';
+        document.getElementById('bulkStatus').style.display = 'none';
+      }
+    }
+
+    function riskColor(level) {
+      return { critical: '#ff6b6b', high: '#ffa94d', medium: '#ffd43b', low: '#51cf66' }[level] || 'var(--muted)';
+    }
+
+    function boolCell(val) {
+      return val
+        ? `<span style="color: var(--red); font-weight: 600;">✓</span>`
+        : `<span style="color: var(--muted);">✗</span>`;
+    }
+
+    function renderBulkTable(rows) {
+      const tbody = document.getElementById('bulkTableBody');
+      tbody.innerHTML = rows.map((r, i) => `
+        <tr style="border-bottom: 1px solid var(--border); ${r.error ? 'opacity:0.5;' : ''}">
+          <td style="padding: 10px 14px; color: var(--muted);">${i + 1}</td>
+          <td style="padding: 10px 14px; font-weight: 600;">${r.ip}</td>
+          <td style="padding: 10px 14px; color: var(--accent2);">${r.asn}</td>
+          <td style="padding: 10px 14px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.asn_org}">${r.asn_org}</td>
+          <td style="padding: 10px 14px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${r.isp}">${r.isp}</td>
+          <td style="padding: 10px 14px;">${r.country_code !== 'N/A' ? r.country_code + ' ' : ''}${r.country}</td>
+          <td style="padding: 10px 14px;">${r.city}</td>
+          <td style="padding: 10px 14px;"><span style="color: ${riskColor(r.risk_level)}; font-weight: 600; text-transform: uppercase;">${r.risk_level}</span></td>
+          <td style="padding: 10px 14px;">${r.risk_score}</td>
+          <td style="padding: 10px 14px; text-align: center;">${boolCell(r.is_vpn)}</td>
+          <td style="padding: 10px 14px; text-align: center;">${boolCell(r.is_proxy)}</td>
+          <td style="padding: 10px 14px; text-align: center;">${boolCell(r.is_tor)}</td>
+          <td style="padding: 10px 14px; text-transform: uppercase; font-size: 11px;">${r.reputation}</td>
+        </tr>
+      `).join('');
+    }
+
+    function exportBulkCSV() {
+      if (!bulkData.length) { alert('Run a lookup first'); return; }
+      const headers = ['IP','ASN','ASN Org','ISP','Country','Country Code','City','Risk Level','Risk Score','VPN','Proxy','TOR','Reputation'];
+      const rows = bulkData.map(r => [
+        r.ip, r.asn, r.asn_org, r.isp, r.country, r.country_code, r.city,
+        r.risk_level, r.risk_score, r.is_vpn, r.is_proxy, r.is_tor, r.reputation
+      ].map(v => `"${String(v).replace(/"/g, '""')}"`).join(','));
+      const csv = [headers.join(','), ...rows].join('\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+      a.download = 'bulk_ip_lookup.csv';
+      a.click();
     }
 
     function showTab(tabName) {

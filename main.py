@@ -695,6 +695,58 @@ async def investigation_leads_endpoint(req: AdvancedAnalysisRequest) -> Dict[str
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class BulkLookupRequest(BaseModel):
+    ips: List[str]
+
+@app.post("/api/advanced/bulk")
+async def bulk_lookup(req: BulkLookupRequest) -> List[Dict[str, Any]]:
+    """Bulk IP lookup: returns key fields including ASN for each IP"""
+    if len(req.ips) > 100:
+        raise HTTPException(status_code=400, detail="Maximum 100 IPs per request")
+
+    results = []
+    async def lookup_one(ip: str) -> Dict[str, Any]:
+        ip = ip.strip()
+        try:
+            data = await fetch_advanced_ip_intelligence(ip)
+            return {
+                "ip": data.ip,
+                "asn": data.network_ownership.asn or "N/A",
+                "asn_org": data.network_ownership.asn_org or "N/A",
+                "isp": data.network_ownership.isp_name or "N/A",
+                "country": data.network_ownership.country or "N/A",
+                "country_code": data.network_ownership.country_code or "N/A",
+                "city": data.network_ownership.city or "N/A",
+                "risk_level": data.risk.level,
+                "risk_score": round(data.risk.score, 1),
+                "is_vpn": data.anonymization.is_vpn,
+                "is_proxy": data.anonymization.is_proxy,
+                "is_tor": data.anonymization.is_tor,
+                "reputation": data.reputation.overall_reputation,
+                "error": None,
+            }
+        except Exception as e:
+            return {
+                "ip": ip,
+                "asn": "N/A",
+                "asn_org": "N/A",
+                "isp": "N/A",
+                "country": "N/A",
+                "country_code": "N/A",
+                "city": "N/A",
+                "risk_level": "unknown",
+                "risk_score": 0,
+                "is_vpn": False,
+                "is_proxy": False,
+                "is_tor": False,
+                "reputation": "unknown",
+                "error": str(e),
+            }
+
+    tasks = [lookup_one(ip) for ip in req.ips if ip.strip()]
+    results = await asyncio.gather(*tasks)
+    return list(results)
+
 # Health check
 @app.get("/health")
 async def health():
