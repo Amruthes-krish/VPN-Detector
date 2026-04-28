@@ -357,6 +357,180 @@
       padding: 40px;
       color: var(--muted);
     }
+
+    /* ════════════════════════════════════════════════════════════════════════ */
+/* OPEN PORTS STYLING */
+/* ════════════════════════════════════════════════════════════════════════ */
+
+.port-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.port-stat-item {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+
+.port-stat-number {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.port-stat-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.port-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.port-item {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 12px;
+  transition: all 0.2s;
+}
+
+.port-item:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.port-number {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.port-service {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.port-product {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.exposure-gauge {
+  width: 100%;
+  height: 30px;
+  background: var(--bg3);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border2);
+  margin: 12px 0;
+}
+
+.exposure-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--bg);
+}
+
+.exposure-fill.none {
+  background: var(--green);
+}
+
+.exposure-fill.low {
+  background: linear-gradient(90deg, var(--green), var(--yellow));
+}
+
+.exposure-fill.medium {
+  background: linear-gradient(90deg, var(--yellow), var(--orange));
+}
+
+.exposure-fill.high {
+  background: linear-gradient(90deg, var(--orange), var(--red));
+}
+
+.exposure-fill.critical {
+  background: var(--red);
+}
+
+.recommendation-item {
+  padding: 12px;
+  background: var(--bg3);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--border2);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.recommendation-item.critical {
+  border-left-color: var(--red);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.recommendation-item.warning {
+  border-left-color: var(--yellow);
+  background: rgba(234, 179, 8, 0.05);
+}
+
+.recommendation-item.info {
+  border-left-color: var(--accent);
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.service-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.service-tag {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.service-tag-name {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.service-tag-count {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+}
   </style>
 </head>
 <body>
@@ -420,20 +594,21 @@
     </div>
 
     <!-- Tabs -->
-    <div class="tabs-container" id="tabsContainer" style="display: none;">
-      <button class="tab-btn active" onclick="showTab('overview')">Overview</button>
-      <button class="tab-btn" onclick="showTab('network')">Network & Ownership</button>
-      <button class="tab-btn" onclick="showTab('reputation')">Reputation</button>
-      <button class="tab-btn" onclick="showTab('infrastructure')">Infrastructure</button>
-      <button class="tab-btn" onclick="showTab('exposure')">Exposure</button>
-      <button class="tab-btn" onclick="showTab('anonymization')">Anonymization</button>
-      <button class="tab-btn" onclick="showTab('risk')">Risk Assessment</button>
-      <button class="tab-btn" onclick="showTab('investigation')">Investigation</button>
-      <button class="tab-btn" onclick="showTab('bulk')">Bulk Lookup</button>
+    <div class="tabs-container" id="tabsContainer">
+      <button class="tab-btn" onclick="showTab('overview', this)">Overview</button>
+      <button class="tab-btn" onclick="showTab('network', this)">Network & Ownership</button>
+      <button class="tab-btn" onclick="showTab('reputation', this)">Reputation</button>
+      <button class="tab-btn" onclick="showTab('infrastructure', this)">Infrastructure</button>
+      <button class="tab-btn" onclick="showTab('exposure', this)">Exposure</button>
+      <button class="tab-btn" onclick="showTab('anonymization', this)">Anonymization</button>
+      <button class="tab-btn" onclick="showTab('risk', this)">Risk Assessment</button>
+      <button class="tab-btn" onclick="showTab('investigation', this)">Investigation</button>,
+      <button class="tab-btn" onclick="showTab('openports')">⚡ Open Ports</button>
+      <button class="tab-btn active" onclick="showTab('bulk', this)">Bulk Lookup</button>
     </div>
 
     <!-- Tabs Content -->
-    <div id="overview" class="tab-panel active">
+    <div id="overview" class="tab-panel">
       <div id="overviewContent"></div>
     </div>
 
@@ -464,8 +639,12 @@
     <div id="investigation" class="tab-panel">
       <div id="investigationContent"></div>
     </div>
+    
+    <div id="openports" class="tab-panel">
+  <div id="openportsContent"></div>
+</div>
 
-    <div id="bulk" class="tab-panel">
+    <div id="bulk" class="tab-panel active">
       <div class="card">
         <div class="card-title">Bulk IP Lookup</div>
         <p style="font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 12px;">
@@ -537,14 +716,6 @@
 
     let currentData = null;
 
-    // Show tabs on load (Bulk Lookup is always available)
-    tabsContainer.style.display = 'flex';
-    document.getElementById('overview').classList.remove('active');
-    document.getElementById('bulk').classList.add('active');
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.tab-btn')[document.querySelectorAll('.tab-btn').length - 1].classList.add('active');
-    noResults.style.display = 'none';
-
     // Event listeners
     searchBtn.addEventListener('click', analyzeIP);
     ipInput.addEventListener('keypress', (e) => {
@@ -560,7 +731,6 @@
 
       searchBtn.disabled = true;
       searchBtn.textContent = 'Analyzing...';
-      tabsContainer.style.display = 'none';
       featureGrid.style.display = 'grid';
       noResults.style.display = 'none';
 
@@ -579,15 +749,14 @@
         currentData = await response.json();
         updateFeatureStatus();
         renderAllTabs();
-        tabsContainer.style.display = 'flex';
         featureGrid.style.display = 'grid';
         noResults.style.display = 'none';
 
         // Auto-switch to overview
-        showTab('overview');
+        const overviewBtn = document.querySelector('.tab-btn[onclick*="overview"]');
+        showTab('overview', overviewBtn);
       } catch (error) {
         alert('Analysis failed: ' + error.message);
-        tabsContainer.style.display = 'none';
         featureGrid.style.display = 'none';
         noResults.style.display = 'block';
       } finally {
@@ -615,6 +784,7 @@
       renderAnonymization();
       renderRisk();
       renderInvestigation();
+      renderOpenPorts();
     }
 
     function renderOverview() {
@@ -1112,19 +1282,147 @@
       a.click();
     }
 
-    function showTab(tabName) {
+    function showTab(tabName, btn) {
       // Hide all tabs
       document.querySelectorAll('.tab-panel').forEach(tab => {
         tab.classList.remove('active');
       });
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
       });
 
       // Show selected tab
       document.getElementById(tabName).classList.add('active');
-      event.target.classList.add('active');
+      if (btn) btn.classList.add('active');
     }
+
+    // ════════════════════════════════════════════════════════════════════════
+// OPEN PORTS FUNCTIONS
+// ════════════════════════════════════════════════════════════════════════
+
+function renderOpenPorts() {
+  if (!currentData) return;
+  
+  const html = `
+    <div class="card">
+      <div class="card-title">📊 Open Ports Scan</div>
+      <div class="port-stats-grid">
+        <div class="port-stat-item">
+          <div class="port-stat-number" id="portCount">0</div>
+          <div class="port-stat-label">Open Ports</div>
+        </div>
+        <div class="port-stat-item">
+          <div class="port-stat-number" id="dangerCount">0</div>
+          <div class="port-stat-label">Critical</div>
+        </div>
+        <div class="port-stat-item">
+          <div class="port-stat-number" id="exposureLevel">-</div>
+          <div class="port-stat-label">Exposure</div>
+        </div>
+        <div class="port-stat-item">
+          <div class="port-stat-number" id="riskScore">0</div>
+          <div class="port-stat-label">Risk</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚡ Exposure Level</div>
+      <div class="exposure-gauge">
+        <div class="exposure-fill" id="exposureFill" style="width: 50%;">MEDIUM</div>
+      </div>
+      <p style="font-family: var(--mono); font-size: 12px; color: var(--muted);">
+        <span id="exposureText">Scanning...</span>
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔍 Detected Open Ports</div>
+      <div class="port-card" id="portsContainer">
+        <p style="color: var(--muted);">Scanning...</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔒 Security Recommendations</div>
+      <div id="recommendationsContainer">
+        <p style="color: var(--muted);">Generating...</p>
+      </div>
+    </div>
+  `;
+  
+  document.getElementById('openportsContent').innerHTML = html;
+  fetchOpenPorts();
+}
+
+async function fetchOpenPorts() {
+  if (!currentData) return;
+  
+  try {
+    const response = await fetch('/api/advanced/open-ports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ip: currentData.ip })
+    });
+    
+    if (!response.ok) throw new Error('Failed');
+    const data = await response.json();
+    updateOpenPortsDisplay(data);
+  } catch (error) {
+    document.getElementById('portsContainer').innerHTML = 
+      '<p style="color: var(--muted);">Error fetching ports</p>';
+  }
+}
+
+function updateOpenPortsDisplay(data) {
+  document.getElementById('portCount').textContent = data.total_ports || 0;
+  document.getElementById('dangerCount').textContent = data.dangerous_ports.length || 0;
+  document.getElementById('exposureLevel').textContent = (data.exposure_level || 'none').toUpperCase();
+  document.getElementById('riskScore').textContent = Math.round(data.risk_score || 0);
+  
+  const exposureLevel = data.exposure_level || 'none';
+  const exposureFill = document.getElementById('exposureFill');
+  const exposurePercentages = { none: 10, low: 30, medium: 60, high: 80, critical: 100 };
+  
+  exposureFill.className = `exposure-fill ${exposureLevel}`;
+  exposureFill.style.width = exposurePercentages[exposureLevel] + '%';
+  exposureFill.textContent = exposureLevel.toUpperCase();
+  
+  document.getElementById('exposureText').textContent = data.risk_description || 'Analyzing...';
+  
+  if (data.open_ports.open_ports && data.open_ports.open_ports.length > 0) {
+    const portsHtml = data.open_ports.open_ports.map(port => {
+      const isDangerous = data.dangerous_ports.includes(port.port);
+      const dangerLevel = getDangerLevel(port.port);
+      
+      return `
+        <div class="port-item">
+          <div class="port-number">${port.port}</div>
+          <div class="port-service">${port.service_name || 'unknown'}</div>
+          ${port.product ? `<div class="port-product">${port.product}</div>` : ''}
+          ${isDangerous ? `<div style="color:#ff6b6b; font-weight:600;">⚠️ ${dangerLevel.toUpperCase()}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+    document.getElementById('portsContainer').innerHTML = portsHtml;
+  }
+  
+  if (data.recommendations && data.recommendations.length > 0) {
+    const recsHtml = data.recommendations.map(rec => {
+      let level = 'info';
+      if (rec.includes('NEVER') || rec.includes('CRITICAL')) level = 'critical';
+      else if (rec.includes('⚠️')) level = 'warning';
+      return `<div class="recommendation-item ${level}">${rec}</div>`;
+    }).join('');
+    document.getElementById('recommendationsContainer').innerHTML = recsHtml;
+  }
+}
+
+function getDangerLevel(port) {
+  const critical = [22, 3306, 5432, 27017, 6379, 2375, 9200];
+  if (critical.includes(port)) return 'critical';
+  return 'medium';
+}
   </script>
 </body>
 </html>

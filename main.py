@@ -21,6 +21,14 @@ from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Any
 from collections import defaultdict
 
+# Open ports detection module
+from open_ports_module import (
+    OpenPortsData, OpenService, get_open_ports, 
+    calculate_port_risk_score, get_port_risk_description,
+    get_port_recommendations, DANGEROUS_PORTS
+)
+
+
 app = FastAPI(title="Advanced IP Intelligence & Threat Analysis")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
@@ -746,6 +754,89 @@ async def bulk_lookup(req: BulkLookupRequest) -> List[Dict[str, Any]]:
     tasks = [lookup_one(ip) for ip in req.ips if ip.strip()]
     results = await asyncio.gather(*tasks)
     return list(results)
+
+# ════════════════════════════════════════════════════════════════════════════════
+# OPEN PORTS DETECTION ENDPOINTS
+# ════════════════════════════════════════════════════════════════════════════════
+
+@app.post("/api/advanced/open-ports")
+async def open_ports_endpoint(req: AdvancedAnalysisRequest) -> dict:
+    """Scan and analyze open ports for an IP address"""
+    try:
+        ports_data = await get_open_ports(req.ip, use_shodan=True, use_censys=True)
+        port_risk_score = calculate_port_risk_score(ports_data)
+        risk_description = get_port_risk_description(ports_data)
+        recommendations = get_port_recommendations(ports_data)
+        
+        return {
+            "ip": req.ip,
+            "open_ports": ports_data.dict(),
+            "risk_score": port_risk_score,
+            "risk_description": risk_description,
+            "recommendations": recommendations,
+            "dangerous_ports": ports_data.most_dangerous_ports,
+            "service_summary": ports_data.service_summary,
+            "total_ports": ports_data.total_open_ports,
+            "exposure_level": ports_data.exposure_level,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/advanced/port-details")
+async def port_details_endpoint(req: AdvancedAnalysisRequest) -> dict:
+    """Get detailed information about specific ports"""
+    try:
+        ports_data = await get_open_ports(req.ip, use_shodan=True, use_censys=True)
+        detailed_ports = []
+        
+        for port_obj in ports_data.open_ports:
+            port_info = {
+                "port": port_obj.port,
+                "service": port_obj.service_name,
+                "product": port_obj.product,
+                "version": port_obj.version,
+                "state": port_obj.state,
+                "source": port_obj.source,
+                "confidence": port_obj.confidence,
+                "last_seen": port_obj.last_seen,
+                "is_dangerous": port_obj.port in DANGEROUS_PORTS,
+            }
+            
+            if port_obj.port in DANGEROUS_PORTS:
+                danger_info = DANGEROUS_PORTS[port_obj.port]
+                port_info["danger_level"] = "CRITICAL"
+                port_info["danger_reason"] = danger_info["risk"]
+            
+            detailed_ports.append(port_info)
+        
+        return {
+            "ip": req.ip,
+            "ports": detailed_ports,
+            "total": len(detailed_ports),
+            "exposure_level": ports_data.exposure_level,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/advanced/port-recommendations")
+async def port_recommendations_endpoint(req: AdvancedAnalysisRequest) -> dict:
+    """Get security recommendations based on open ports"""
+    try:
+        ports_data = await get_open_ports(req.ip, use_shodan=True, use_censys=True)
+        recommendations = get_port_recommendations(ports_data)
+        
+        return {
+            "ip": req.ip,
+            "open_port_count": ports_data.total_open_ports,
+            "dangerous_port_count": len(ports_data.most_dangerous_ports),
+            "recommendations": recommendations,
+            "risk_level": ports_data.exposure_level,
+            "action_required": bool(ports_data.most_dangerous_ports),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Health check
 @app.get("/health")
